@@ -1,0 +1,132 @@
+const request = require('request-promise');
+const moment = require('moment');
+const fs = require('fs');
+const { exec } = require('child_process');
+const program = require('commander');
+
+/*
+
+Helpful NASA links:
+  https://sdo.gsfc.nasa.gov/
+  https://www.nasa.gov/mission_pages/sunearth/news/light-wavelengths.html
+
+Example file URL:
+  https://sdo.gsfc.nasa.gov/assets/img/dailymov/2014/05/09/20140509_1024_0131.mp4
+
+FFMPEG command to concat mp4 videos:
+ffmpeg -y \
+-i 20140509_1024_0094.mp4 \
+-i 20140510_1024_0094.mp4 \
+-i 20140511_1024_0094.mp4 \
+-i 20140512_1024_0094.mp4 \
+-filter_complex "[0:v] [1:v] [2:v] [3:v] concat=n=4:v=1 [v]" -map "[v]" output_video.mp4
+
+*/
+
+var directory = 'videos';
+
+program
+  .version('0.1.0')
+  .usage('[options] <directory>')
+  .option('-d, --dates <dateFrom>..<dateTo>', 'Date range of SDO data to download', d => d.split('..'), [
+    '2014-05-09',
+    '2014-05-10'
+    ] )
+  .option('-i, --instruments <instruments>', 'A comma separated list of instruments', i => i.split(/,/), [
+    '0094',
+    '0131',
+    '0171',
+    '0193',
+    '0211',
+    '0304',
+    '0335',
+    '1600',
+    '1700',
+    '4500',
+    'HMIB',
+    'HMID',
+    'HMII'
+    ] )
+  .arguments('<directory>')
+  .action( _directory => directory = _directory )
+  .parse(process.argv);
+
+if (!fs.existsSync(directory)){ fs.mkdirSync(directory); }
+
+let dateFrom = moment( program.dates[0] );
+let dateTo = moment( program.dates[1] );
+let suffixes = program.instruments.map( i => `_1024_${i}` );
+
+console.log(`downloading sdo from ${dateFrom} to ${dateTo}`);
+
+let dateNow = dateFrom;
+var promise = Promise.resolve();
+let files = [];
+let dates = [];
+
+// Download SDO data
+
+while (dateNow <= dateTo){
+  let date = moment(dateNow).format('YYYYMMDD');
+  let year = moment(dateNow).format('YYYY');
+  let month = moment(dateNow).format('MM');
+  let day = moment(dateNow).format('DD');
+  dates.push(dateNow);
+
+  suffixes.forEach((suffix)=>{
+    let file = `${date}${suffix}.mp4`;
+    let url = `https://sdo.gsfc.nasa.gov/assets/img/dailymov/${year}/${month}/${day}/${file}`;
+    promise = promise.then(function(){
+      return request( { url: url, encoding: null } ).then(function(r){
+        console.log(`downloaded ${url}`);
+        const buffer = Buffer.from(r);
+        const f = `${directory}/${file}`;
+        fs.writeFileSync(f,buffer);
+        files.push(f);
+      })
+    });
+  });
+
+  dateNow = moment(dateNow).add(1,'d');
+}
+
+// Merge mp4 data
+
+suffixes.forEach((suffix)=>{
+
+  let cmd = 'ffmpeg -y ';
+  let cmd_vs = '';
+  let i = 0;
+
+  dateNow = dateFrom;
+
+  while (dateNow <= dateTo){
+    let date = moment(dateNow).format('YYYYMMDD');
+    let year = moment(dateNow).format('YYYY');
+    let month = moment(dateNow).format('MM');
+    let day = moment(dateNow).format('DD');
+    let file = `${directory}/${date}${suffix}.mp4`;
+
+    cmd += ` -i '${file}' `
+    cmd_vs += `[${i++}:v] `;
+
+    dateNow = moment(dateNow).add(1,'d');
+  }
+
+  cmd += `-filter_complex "${cmd_vs} concat=n=${i}:v=1 [v]" -map "[v]" ${directory}/${suffix}.mp4`;
+
+  promise = promise.then((function(_cmd){
+    return function(){
+      console.log(`executing ${_cmd}`);
+      exec(_cmd, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.log(`stderr: ${stderr}`);
+      });
+    }
+  })(cmd));
+
+});
