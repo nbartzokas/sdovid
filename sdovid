@@ -25,7 +25,7 @@ ffmpeg -y \
 
 */
 
-var directory = 'videos';
+var directory = null;
 
 program
   .version('0.1.0')
@@ -52,6 +52,8 @@ program
   .arguments('<directory>')
   .action( _directory => directory = _directory )
   .parse(process.argv);
+
+if (!directory) { program.help(); }
 
 if (!fs.existsSync(directory)){ fs.mkdirSync(directory); }
 

@@ -1,17 +1,16 @@
 {
   "name": "sdovid",
   "version": "1.0.0",
-  "description": "",
-  "main": "sdovid.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
+  "description": "Script to download and concatenate NASA Solar Dynamics Observatory videos",
+  "author": "@nickbartzokas",
+  "license": "MIT",
   "dependencies": {
     "commander": "^2.15.1",
     "moment": "^2.21.0",
     "request": "^2.85.0",
     "request-promise": "^4.2.2"
+  },
+  "bin": {
+    "sdovid": "sdovid"
   }
 }
