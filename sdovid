@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const request = require('request-promise');
 const moment = require('moment');
 const fs = require('fs');
@@ -13,7 +15,7 @@ Helpful NASA links:
 Example file URL:
   https://sdo.gsfc.nasa.gov/assets/img/dailymov/2014/05/09/20140509_1024_0131.mp4
 
-FFMPEG command to concat mp4 videos:
+Example FFMPEG command to concat mp4 videos:
 ffmpeg -y \
 -i 20140509_1024_0094.mp4 \
 -i 20140510_1024_0094.mp4 \
@@ -32,7 +34,7 @@ program
     '2014-05-09',
     '2014-05-10'
     ] )
-  .option('-i, --instruments <instruments>', 'A comma separated list of instruments', i => i.split(/,/), [
+  .option('-i, --instruments <instruments>', 'A comma separated list of SDO instruments', i => i.split(/,/), [
     '0094',
     '0131',
     '0171',
@@ -54,7 +56,7 @@ program
 if (!fs.existsSync(directory)){ fs.mkdirSync(directory); }
 
 let dateFrom = moment( program.dates[0] );
-let dateTo = moment( program.dates[1] );
+let dateTo = moment( program.dates[1]||program.dates[0] );
 let suffixes = program.instruments.map( i => `_1024_${i}` );
 
 console.log(`downloading sdo from ${dateFrom} to ${dateTo}`);
