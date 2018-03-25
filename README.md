@@ -27,7 +27,7 @@ SDO's goal is to understand, driving towards a predictive capability, the solar 
 ### Usage
 
 ```
-Usage: sdovid [options] <directory>
+Usage: ./sdovid [options] <directory>
 
 Options:
 
