@@ -15,7 +15,7 @@ SDO's goal is to understand, driving towards a predictive capability, the solar 
 
 ### Requirements
 
-- ffmpeg
+- [ffmpeg](https://www.ffmpeg.org/download.html)
 
 ### Setup
 
