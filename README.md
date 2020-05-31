@@ -16,11 +16,10 @@ SDO's goal is to understand, driving towards a predictive capability, the solar 
 ### Requirements
 
 - ffmpeg
-- maybe OSX (untested on Windows)
 
 ### Setup
 
-- install ffmpeg (e.g. on OSX with brew, `brew install ffmpeg`)
+- install [ffmpeg](https://www.ffmpeg.org/download.html)
 - clone this repo
 - run `npm install`
 
